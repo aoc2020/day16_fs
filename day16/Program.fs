@@ -2,6 +2,7 @@
 
 open day16.BaseTypes
 open day16.Input
+open day16.Identify 
                  
 let completelyInvalid (fields:Field[]) (ticket:Ticket) : bool =
     let invalid (value:uint64) : bool =
@@ -23,13 +24,43 @@ let withoutCompletelyInvalid (ticketData:TicketData) :TicketData =
     let validNearby = ticketData.Nearby |> Seq.filter (completelyInvalid ticketData.Fields) |> Seq.toArray 
     ticketData.replaceNearby validNearby     
 
+let validAtPos (field:Field) (ticket:Ticket) (pos:int) =
+    let value = ticket.[pos]
+    field.isValid value
+
+let invalidAtPos field ticket pos = validAtPos field ticket pos |> not
+
+let someInvalidAtPos field (tickets:Ticket[]) pos =
+    tickets |> Seq.exists (fun tick -> invalidAtPos field tick pos)
+
+let validPosition field (tickets:Ticket[]) pos =
+    let someInvalid = someInvalidAtPos field tickets pos
+    someInvalid |> not 
+    
+let candidatePositions (field:Field) (tickets:Ticket[]) (range:int[]) =
+    range |> Seq.filter (fun (i:int) -> validPosition field tickets i)     
+    
+let candidatesPerPos (ticketData:TicketData) (range:int[]) : int[][] =
+    let nearby = ticketData.Nearby
+    let fields = ticketData.Fields    
+    let candidates = fields |> Seq.map (fun (f:Field) -> candidatePositions f nearby range)
+    candidates |> Seq.map Seq.toArray |> Seq.toArray 
+
 let task2 (ticketData:TicketData) =
     let data1 = withoutCompletelyInvalid ticketData  
-    printf "$$$ %A" data1 
-
+    printfn "$$$ %A" data1
+    let range = [0..data1.Yours.Length-1] |> Seq.toArray   
+    printfn "Range: %A" range
+    let candidates: int[][] = candidatesPerPos ticketData range
+    let identified : Option<int>[] = range |> Seq.map (fun f -> None) |> Seq.toArray 
+    printfn "Candidates: %A" candidates
+    printfn "Identified: %A" identified
+    let determined = identifyAll candidates identified
+    printfn "Determined: %A" determined 
+    
 [<EntryPoint>]
 let main argv =
-    let input = "/Users/xeno/projects/aoc2020/day16_fs/input2.txt"
+    let input = "/Users/xeno/projects/aoc2020/day16_fs/input3.txt"
     let inputData = readSplitInput input    
     let fields = inputData.Fields |> Seq.map (Field) |> Seq.toArray 
     let nearby = inputData.Nearby
