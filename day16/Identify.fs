@@ -35,4 +35,3 @@ let rec identifyAll (candidates:int[][]) (identified:Option<int>[]): Option<int>
     if allIdentified newlyIdentified
     then newlyIdentified
     else identifyAll cleaned newlyIdentified 
-    

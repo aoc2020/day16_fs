@@ -26,19 +26,22 @@ let withoutCompletelyInvalid (ticketData:TicketData) :TicketData =
 
 let validAtPos (field:Field) (ticket:Ticket) (pos:int) =
     let value = ticket.[pos]
-    field.isValid value
+    let isValid = field.isValid value
+    isValid
 
-let invalidAtPos field ticket pos = validAtPos field ticket pos |> not
+let invalidAtPos field ticket pos =
+    validAtPos field ticket pos |> not
 
-let someInvalidAtPos field (tickets:Ticket[]) pos =
+let someInvalidAtPos field (tickets:Ticket[]) pos =   
     tickets |> Seq.exists (fun tick -> invalidAtPos field tick pos)
 
 let validPosition field (tickets:Ticket[]) pos =
     let someInvalid = someInvalidAtPos field tickets pos
     someInvalid |> not 
     
-let candidatePositions (field:Field) (tickets:Ticket[]) (range:int[]) =
-    range |> Seq.filter (fun (i:int) -> validPosition field tickets i)     
+let candidatePositions (field:Field) (tickets:Ticket[]) (range:int[]) : int[] =
+    let pos = range |> Seq.filter (fun (i:int) -> validPosition field tickets i) |> Seq.toArray 
+    pos 
     
 let candidatesPerPos (ticketData:TicketData) (range:int[]) : int[][] =
     let nearby = ticketData.Nearby
@@ -61,17 +64,11 @@ let calcResult (fieldValues: (Field*uint64)[]) : uint64 =
 
 let task2 (ticketData:TicketData) =
     let data1 = withoutCompletelyInvalid ticketData  
-    printfn "$$$ %A" data1
     let range = [0..data1.Yours.Length-1] |> Seq.toArray   
-    printfn "Range: %A" range
-    let candidates: int[][] = candidatesPerPos ticketData range
+    let candidates: int[][] = candidatesPerPos data1 range
     let identified : Option<int>[] = range |> Seq.map (fun f -> None) |> Seq.toArray 
-    printfn "Candidates: %A" candidates
-    printfn "Identified: %A" identified
     let determined = identifyAll candidates identified
-    printfn "Determined: %A" determined
     let myValues = mapToMyValues ticketData determined
-    printfn "My values: %A" myValues
     let answer2 = calcResult myValues
     printfn "Answer 2: %A" answer2
     
