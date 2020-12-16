@@ -46,6 +46,19 @@ let candidatesPerPos (ticketData:TicketData) (range:int[]) : int[][] =
     let candidates = fields |> Seq.map (fun (f:Field) -> candidatePositions f nearby range)
     candidates |> Seq.map Seq.toArray |> Seq.toArray 
 
+let mapToMyValues (ticketData:TicketData) (determined:Option<int>[]) : (Field*uint64)[] =
+    let myValue (field:Field) (pos:Option<int>) = (field,ticketData.Yours.[pos.Value])
+    Seq.map2 myValue ticketData.Fields determined |> Seq.toArray 
+
+let calcResult (fieldValues: (Field*uint64)[]) : uint64 =
+    let multiply a b = a * b
+    let relevant (fieldValue:Field*uint64) : bool =
+        let field = fst fieldValue
+        field.Name.StartsWith "departure"
+    let values = fieldValues |> Seq.filter relevant |> Seq.map snd
+    let result = values |> Seq.fold multiply 1UL
+    result 
+
 let task2 (ticketData:TicketData) =
     let data1 = withoutCompletelyInvalid ticketData  
     printfn "$$$ %A" data1
@@ -56,11 +69,16 @@ let task2 (ticketData:TicketData) =
     printfn "Candidates: %A" candidates
     printfn "Identified: %A" identified
     let determined = identifyAll candidates identified
-    printfn "Determined: %A" determined 
+    printfn "Determined: %A" determined
+    let myValues = mapToMyValues ticketData determined
+    printfn "My values: %A" myValues
+    let answer2 = calcResult myValues
+    printfn "Answer 2: %A" answer2
+    
     
 [<EntryPoint>]
 let main argv =
-    let input = "/Users/xeno/projects/aoc2020/day16_fs/input3.txt"
+    let input = "/Users/xeno/projects/aoc2020/day16_fs/input.txt"
     let inputData = readSplitInput input    
     let fields = inputData.Fields |> Seq.map (Field) |> Seq.toArray 
     let nearby = inputData.Nearby

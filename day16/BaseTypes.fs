@@ -16,6 +16,7 @@ type Field (name: String, range1:Range,range2:Range) as self =
         Field(f.Name,range1,range2)
     member this.isValid (value:uint64) : bool =
         range1.contains value || range2.contains value
+    member this.Name = name 
         
 type TicketData (fields:Field[], yours:Ticket, nearby:Ticket[]) as self =
     override this.ToString () = sprintf "TicketData fields:%A yours:%A nearby:%A" fields yours nearby
